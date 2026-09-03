@@ -126,7 +126,6 @@
 </footer>
 
 <script>
-  // Paste the "Publish to web" CSV link for your Google Sheet here.
   const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1Kf9kCjCj7ob2sKfWiG88Ge21Kd10nq63QJtsDxkkn-4/gviz/tq?tqx=out:csv&sheet=Sheet1";
 
   const contentEl = document.getElementById('content');
@@ -152,14 +151,14 @@
       groups[cat].forEach(r => {
         const name = escapeHtml(r.Name || '');
         const desc = escapeHtml(r.Description || '');
-        const phone = (r.Phone || '').trim();
+        const whatsapp = (r.WhatsApp || r.Phone || '').trim();
         const landmark = escapeHtml(r.Landmark || '');
         html += `<div class="listing">
           <div class="name">${name}</div>
           ${desc ? `<div class="desc">${desc}</div>` : ''}
           <div class="meta">
-            ${phone ? `📞 <a href="tel:${phone}">${escapeHtml(phone)}</a>` : ''}
-            ${phone && landmark ? ' · ' : ''}
+            ${whatsapp ? `💬 <a href="${escapeHtml(whatsapp)}" target="_blank" rel="noopener noreferrer">Click here to Contact</a>` : ''}
+            ${whatsapp && landmark ? ' · ' : ''}
             ${landmark ? `📍 ${landmark}` : ''}
           </div>
         </div>`;
