@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mallasandra Local</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+  :root {
+    --bg: #faf7f2;
+    --card: #ffffff;
+    --ink: #2b2620;
+    --muted: #6b6258;
+    --accent: #c9622a;
+    --line: #e8e0d5;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  header {
+    padding: 40px 20px 24px;
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+  }
+  header h1 {
+    margin: 0 0 6px;
+    font-size: 2rem;
+    letter-spacing: -0.02em;
+  }
+  header p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+  .search-wrap {
+    max-width: 640px;
+    margin: 20px auto 0;
+    padding: 0 20px;
+  }
+  #searchBox {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 1rem;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    outline: none;
+  }
+  #searchBox:focus { border-color: var(--accent); }
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+  .category {
+    margin-top: 32px;
+  }
+  .category h2 {
+    font-size: 1.1rem;
+    margin: 0 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--accent);
+    display: inline-block;
+  }
+  .listing {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  .listing .name {
+    font-weight: 600;
+    font-size: 1.02rem;
+  }
+  .listing .desc {
+    color: var(--muted);
+    font-size: 0.92rem;
+    margin-top: 2px;
+  }
+  .listing .meta {
+    margin-top: 6px;
+    font-size: 0.88rem;
+    color: var(--ink);
+  }
+  .listing .meta a { color: var(--accent); text-decoration: none; }
+  .status, .empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 40px 20px;
+  }
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.82rem;
+    padding: 20px;
+    border-top: 1px solid var(--line);
+  }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Mallasandra Local</h1>
+  <p>A community-maintained list of local businesses in Mallasandra</p>
+</header>
+
+<div class="search-wrap">
+  <input id="searchBox" type="text" placeholder="Search by name, category, or landmark…">
+</div>
+
+<main id="content">
+  <div class="status">Loading listings…</div>
+</main>
+
+<footer>
+  Maintained by residents, for residents. Details may change — please confirm with the business directly.
+  <br>
+  <a href="SHEET_EDIT_URL_HERE" target="_blank">Suggest an addition</a>
+</footer>
+
+<script>
+  // Paste the "Publish to web" CSV link for your Google Sheet here.
+  const SHEET_CSV_URL = "PASTE_YOUR_PUBLISHED_CSV_URL_HERE";
+
+  const contentEl = document.getElementById('content');
+  const searchBox = document.getElementById('searchBox');
+  let allRows = [];
+
+  function render(rows) {
+    if (!rows.length) {
+      contentEl.innerHTML = '<div class="empty">No listings found.</div>';
+      return;
+    }
+
+    const groups = {};
+    rows.forEach(r => {
+      const cat = (r.Category || 'Other').trim();
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(r);
+    });
+
+    let html = '';
+    Object.keys(groups).sort().forEach(cat => {
+      html += `<div class="category"><h2>${escapeHtml(cat)}</h2>`;
+      groups[cat].forEach(r => {
+        const name = escapeHtml(r.Name || '');
+        const desc = escapeHtml(r.Description || '');
+        const phone = (r.Phone || '').trim();
+        const landmark = escapeHtml(r.Landmark || '');
+        html += `<div class="listing">
+          <div class="name">${name}</div>
+          ${desc ? `<div class="desc">${desc}</div>` : ''}
+          <div class="meta">
+            ${phone ? `📞 <a href="tel:${phone}">${escapeHtml(phone)}</a>` : ''}
+            ${phone && landmark ? ' · ' : ''}
+            ${landmark ? `📍 ${landmark}` : ''}
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    });
+    contentEl.innerHTML = html;
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  function applyFilter() {
+    const q = searchBox.value.trim().toLowerCase();
+    if (!q) { render(allRows); return; }
+    const filtered = allRows.filter(r =>
+      Object.values(r).join(' ').toLowerCase().includes(q)
+    );
+    render(filtered);
+  }
+
+  searchBox.addEventListener('input', applyFilter);
+
+  Papa.parse(SHEET_CSV_URL, {
+    download: true,
+    header: true,
+    skipEmptyLines: true,
+    complete: function(results) {
+      allRows = results.data.filter(r => r.Name && r.Name.trim());
+      render(allRows);
+    },
+    error: function() {
+      contentEl.innerHTML = '<div class="empty">Could not load listings. Check the sheet link in index.html.</div>';
+    }
+  });
+</script>
+
+</body>
+</html>
