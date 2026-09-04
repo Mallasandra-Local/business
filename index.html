@@ -378,11 +378,15 @@
       contentEl.innerHTML = '<div class="empty">No listings found.</div>';
       return;
     }
-    const groups = {};
+        const groups = {};
     rows.forEach(r => {
       const cat = (r.Category || 'Other').trim();
       if (!groups[cat]) groups[cat] = [];
       groups[cat].push(r);
+    });
+    // Sort businesses A-Z within each group
+    Object.keys(groups).forEach(cat => {
+      groups[cat].sort((a, b) => (a.Name || '').localeCompare(b.Name || ''));
     });
     let html = '';
     Object.keys(groups).sort().forEach(cat => {
