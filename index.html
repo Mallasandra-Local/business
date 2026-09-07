@@ -306,10 +306,27 @@
     'entertainment': '🎭'
   };
 
-  function getIcon(cat) {
-    const k = (cat || '').toLowerCase();
-    for (const kw in ICONS) { if (k.includes(kw)) return ICONS[kw]; }
-    return '🏪';
+    const ICONS = {
+    'Healthcare':                         '🏥',
+    'Food & Beverages':                   '🍽️',
+    'Home & Professional Services':       '🔧',
+    'Technology & Entertainment':         '💻',
+    'Travel, Transportation and Tourism': '✈️',
+    'Education':                          '📚',
+    'Others':                             '📦',
+    'Retail & Grocery':                   '🛒',
+    'Religious & Community':              '🙏',
+    'Art, Music & Dance':                 '🎨',
+    'Hospitality & Recreation':           '🏨',
+    'Beauty & Personal Care':             '💇',
+    'Fashion & Clothing':                 '👗',
+    'Automotive':                         '🚗',
+    'Pets':                               '🐾',
+    'Financial Services':                 '💰',
+    'Lifestyle':                          '🌿',
+    'Professional Services':              '💼',
+    'Sports & Fitness':                   '⚽',
+  };
   }
 
   const contentEl = document.getElementById('content');
